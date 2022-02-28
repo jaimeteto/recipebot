@@ -2,12 +2,13 @@
 A recipe bot created using Discord.py, ASYNC PRAW, and Selenium. Functionalities consist of recommending recipes, generating shopping lists of missing ingredients, and more.
 
                                               
-                        ~~~~PLACEHOLDER FOR DEMO SHOWCASING BOT~~~~
+                                      ~~~~PLACEHOLDER FOR DEMO SHOWCASING BOT~~~~
 
 
-List of features, some TBD
+List of features
 
-- User can list an ingredient which will allow the bot to recommend a recipe (insert command demo here when we implement that)
-- User can ask for a recipe from a specific category (breakfast, lunch, dinner, etc) (insert command demo here when we implement that)
-- User can request the bot to provide a structured list of ingredients that the recipe requires
+- User can list an ingredient they have on hand and the bot will recommend a recipe 
+- User can ask filter from a specific category (breakfast, lunch, dinner, etc) 
+- User can request the bot to provide a structured list of ingredients that the recipe requires, similar to a shopping list
 - Bot can convert measurements, create timers, provide random cooking facts, and other social features
+- User can input a keyword in order to get a more specific recipe from the bot
