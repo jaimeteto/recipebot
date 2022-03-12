@@ -51,6 +51,3 @@ async def on_message(message):
         await message.channel.send("Command received!")
 
 
-
-# Running our bot using its dedicated token
-client.run('OTUyMjg0NjE1NTM0NTgzODA4.YizyKA.3fnwxAhIObzZBV_FZ04DsjwSgEM')
