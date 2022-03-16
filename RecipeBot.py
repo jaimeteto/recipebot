@@ -51,3 +51,30 @@ async def on_message(message):
         await message.channel.send("Command received!")
 
 
+#    if message.content.startswith("!commands"):
+ #       await message.channel.send()
+
+# gathering what recipe our bot will search for
+
+    # begins by separating our actual recipe string
+    if message.content.startswith("!ingredients"):
+        
+        # gathers the string that we care about following our command
+        content = message.content.split("!ingredients ")[1]
+        
+        # begins by getting access to the recipe site we want to use
+        driver.get('https://www.allrecipes.com/#')
+        
+        # locates the search bar
+        search = driver.find_element_by_xpath('//input[@id="search-block"]')
+        
+        # inputs the ingredients the user wants into the search bar and searches
+        search.send_keys(content)
+        search.send_keys(Keys.RETURN)
+        await message.channel.send("Found recipes for " + content)
+
+      
+      
+      
+      
+   
