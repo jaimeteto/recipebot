@@ -1,15 +1,27 @@
+from inspect import istraceback
 import discord
 import asyncpraw
 import os
+import random
+import time
+import requests
+import re
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from discord.ext import commands
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup
+from lxml import html
 
-# Features to be implemented as time goes on, current placeholder until sprints begin.
+# ignoring certain errors that may pop up
+options = webdriver.ChromeOptions()
+options.add_argument('--ignore-certificate-errors')
+options.add_argument('--ignore-ssl-errors')
 
 # Setting our browser to use Chrome
-driver = webdriver.Chrome()
+driver = webdriver.Chrome(options=options)
 
 
 # Accessing our desired pages to scrape
@@ -38,8 +50,6 @@ img_id = []
 # setting up bot to register commands that start with an !
 bot = commands.Bot(command_prefix='!')
 
-
-
 # registering events using a callback
 
 @client.event
@@ -48,8 +58,9 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    if message.author == client.user:
+    if message.author == bot.user:
         return
+
 
 # if the user triggers a cooldown, this event will return an error message to the user
 @bot.event
@@ -74,21 +85,41 @@ async def cmds(ctx):
 # gathering what recipe our bot will search for
 @bot.command()
 # adding a cooldown between commands
-@commands.cooldown(1, 10, commands.BucketType.user) 
+@commands.cooldown(1, 5, commands.BucketType.user) 
 async def ingredients(ctx, *, arg):    
 
-    # begins by getting access to the recipe site we want to use
-    driver.get('https://www.allrecipes.com/#')
-        
+    # begins by getting access to the recipe site we want to use and searches by the users input
+    driver.get('https://www.allrecipes.com/search/results/?search=' + arg.replace(" ", "+"))
+    
     # locates the search bar
-    search = driver.find_element(By.XPATH, '//input[@id="search-block"]')
+#    search = driver.find_element(By.XPATH, '//input[@id="search-block"]')
         
-    # inputs the ingredients the user wants into the search bar and searches
-    search.send_keys(arg)
-    search.send_keys(Keys.RETURN)   
-        
-    await ctx.send("Found recipes for " + arg)
 
- #TODO
- # Need a way to randomly retrieve a result, so as to avoid giving the user the same recipe multiple times.
- # Still possible to randomly get the same recipe twice, but likelihood is lower this way   
+    time.sleep(5)
+
+    # getting url of our current page, which is going to be the page where the recipes are
+    url = driver.current_url
+    
+    # now creating variable r to get access to our url using BeautifulSoup 
+    r = requests.get(url)
+    sourcePage = r.content
+
+    soup = BeautifulSoup(sourcePage, 'lxml')
+    links = []
+
+    # looping through our web page to find all instances of a certain div
+    # followed by inputting all of our links into our list to be accessed
+    for i in soup.findAll('div', {"class" : "component card card__recipe card__facetedSearchResult"}):
+        link = i.find('a', href=True)
+        if link is None:
+            continue
+        links.append(link)
+        print(link['href'])
+
+    # grabbing a random link from our list to display to the user
+    # this way they won't see duplicate results as often
+    randomNum = random.randint(0, len(links))
+   
+    await ctx.send(links[randomNum]['href'])
+
+
