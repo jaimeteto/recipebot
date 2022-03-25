@@ -122,4 +122,26 @@ async def ingredients(ctx, *, arg):
    
     await ctx.send(links[randomNum]['href'])
 
+@bot.command()
+async def help(ctx):
+  embed = discord.Embed(color = discord.Color.orange())
+  embed.set_author(name='Help')
 
+  #List of commands
+  embed.add_field(name='!Timer',value = 'set a timer   in minutes',inline= False)
+  embed.add_field(name='!Ingredients',value='lets you search a recipe with specified ingredient',inline= False)
+  
+  await ctx.send(embed = embed)
+
+
+ #starting a timer with argument in minutes
+@bot.command()
+async def timer(ctx, minutes: int):
+    if minutes <0:
+      await ctx.send("number can't be a negative")
+    else:
+      await ctx.send("time set to:"+ str(minutes))
+      time.sleep(minutes *60)
+      await ctx.send("Timer has ended")
+
+    
