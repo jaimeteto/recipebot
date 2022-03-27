@@ -1,4 +1,5 @@
 from inspect import istraceback
+from tkinter import Image
 import discord
 import asyncpraw
 import os
@@ -6,14 +7,15 @@ import random
 import time
 import requests
 import re
+import cchardet
+import lxml
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from discord.ext import commands
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
-from lxml import html
+from recipe_scrapers import scrape_me
+
 
 # ignoring certain errors that may pop up
 options = webdriver.ChromeOptions()
@@ -22,6 +24,8 @@ options.add_argument('--ignore-ssl-errors')
 
 # Setting our browser to use Chrome
 driver = webdriver.Chrome(options=options)
+
+
 
 
 # Accessing our desired pages to scrape
@@ -66,7 +70,7 @@ async def on_message(message):
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.CommandOnCooldown):
-        err = 'Please wait 10 seconds between commands'
+        err = 'Please wait 5 seconds between commands'
         await ctx.send(err)
 
 # Testing bot commands
@@ -83,59 +87,64 @@ async def cmds(ctx):
     await ctx.send("\n".join(list_cmds))
 
 # gathering what recipe our bot will search for
-@bot.command()
+@bot.command(description='Call this command to search for recipes with certain ingredients')
 # adding a cooldown between commands
 @commands.cooldown(1, 5, commands.BucketType.user) 
 async def ingredients(ctx, *, arg):    
+    async with ctx.typing():
 
-    # begins by getting access to the recipe site we want to use and searches by the users input
-    driver.get('https://www.allrecipes.com/search/results/?search=' + arg.replace(" ", "+"))
+        # begins by getting access to the recipe site we want to use and searches by the users input
+
+        # getting url of our current page, which is going to be the page where the recipes are
+        url = 'https://www.allrecipes.com/search/results/?search=' + arg.replace(" ", "+")
     
-    # locates the search bar
-#    search = driver.find_element(By.XPATH, '//input[@id="search-block"]')
+        # now creating variable r to get access to our url using BeautifulSoup 
+        r = requests.get(url)
+        sourcePage = r.text
+
+        soup = BeautifulSoup(sourcePage, 'lxml')
+
+        # going through our web page to find all instances of a certain div
+        random_link = soup.findAll('div', {"class" : "component card card__recipe card__facetedSearchResult"})
+        # grabbing a random link from our list to display to the user
+        # this way they won't see duplicate results as often
+        randomNum = random.randint(0, len(random_link))
+        links = random_link[randomNum].find('a', href=True)
         
-
-    time.sleep(5)
-
-    # getting url of our current page, which is going to be the page where the recipes are
-    url = driver.current_url
+        scraper = scrape_me(links['href'])
     
-    # now creating variable r to get access to our url using BeautifulSoup 
-    r = requests.get(url)
-    sourcePage = r.content
+        
+        # getting access to our desired recipe page to scrape more information
+        r = requests.get(links['href'])
+        sourcePage = r.text
+        soup = BeautifulSoup(sourcePage, 'lxml')
 
-    soup = BeautifulSoup(sourcePage, 'lxml')
-    links = []
+        # scraping through the page to find a description
+        desc = soup.find('p', {"class" : "margin-0-auto"})
+    
+        # sending a formatted message with the recipes title, description, link, and image
+        embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
+        embedRecipe.set_image(url="{}".format(scraper.image()))
+        
+        
+    await ctx.send(embed=embedRecipe)
 
-    # looping through our web page to find all instances of a certain div
-    # followed by inputting all of our links into our list to be accessed
-    for i in soup.findAll('div', {"class" : "component card card__recipe card__facetedSearchResult"}):
-        link = i.find('a', href=True)
-        if link is None:
-            continue
-        links.append(link)
-        print(link['href'])
+# sort of overwriting help command to follow a certain format
+class HelpCommand(commands.MinimalHelpCommand):
+    async def send_pages(self):
+        # gets all of our commands, and adds its description to our help command
+        destination = self.get_destination()
+        eb = discord.Embed(color=discord.Color.green(), description='')
+        for page in self.paginator.pages:
+            eb.description += page
+        await destination.send(embed=eb)
 
-    # grabbing a random link from our list to display to the user
-    # this way they won't see duplicate results as often
-    randomNum = random.randint(0, len(links))
-   
-    await ctx.send(links[randomNum]['href'])
+bot.help_command = HelpCommand()
 
-@bot.command()
-async def help(ctx):
-  embed = discord.Embed(color = discord.Color.orange())
-  embed.set_author(name='Help')
-
-  #List of commands
-  embed.add_field(name='!Timer',value = 'set a timer   in minutes',inline= False)
-  embed.add_field(name='!Ingredients',value='lets you search a recipe with specified ingredient',inline= False)
-  
-  await ctx.send(embed = embed)
 
 
  #starting a timer with argument in minutes
-@bot.command()
+@bot.command(description='A timer to help with tracking time')
 async def timer(ctx, minutes: int):
     if minutes <0:
       await ctx.send("number can't be a negative")
@@ -145,3 +154,4 @@ async def timer(ctx, minutes: int):
       await ctx.send("Timer has ended")
 
     
+bot.run('OTUyMjg0NjE1NTM0NTgzODA4.YizyKA.3fnwxAhIObzZBV_FZ04DsjwSgEM')
