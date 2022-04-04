@@ -152,6 +152,85 @@ async def timer(ctx, minutes: int):
       await ctx.send("time set to:"+ str(minutes))
       time.sleep(minutes *60)
       await ctx.send("Timer has ended")
+      
+# give a table containing all conversions for the user input
+@bot.command(description='Call this command to convert a number from one unit of measurement to another.'\
+    + '\n Type in a valid **value**, **units** of that value, and the **desired units** to convert to.')
+async def convert(ctx, *args):
+    async with ctx.typing():
+
+        # checking if any of the arguments are about temperature, which is not included in the website
+        if (args[1] == 'c' and args[2] == 'f') or (args[1] == 'f' and args[2] == 'c'):
+            # formula for celsius to fahrenheit
+            if args[1] == 'c':
+                result = (float(args[0]) * 1.8) + 32
+            # formula for fahrenheit to celsius
+            else:
+                result = (float(args[0]) - 32) * 0.5556
+
+            # send the conversion in a nice formatted message with a title and conversion
+            embedConvert = discord.Embed(title = 'Conversion: **' + args[1] + '** → **' + args[2]\
+             + '**', description = '```' + str(result) + '°' + args[2] + '```')
+
+        else:
+            # begins by getting access to the calculator site we want to use and searches by the users input
+
+            # getting url of our current page, which is going to be the page where the conversion takes place
+            url = 'http://www.calcul.com/show/calculator/cooking-conversion?input=' + '%7C'.join(args)
+
+            # now creating variable r to get access to our url using BeautifulSoup
+            r = requests.get(url)
+            sourcePage = r.text
+            soup = BeautifulSoup(sourcePage, 'lxml')
+
+            # retrieving the result of the conversion and processing the string
+            result = soup.find('span', {"class" : "result"})
+            conversion = (result.string).replace('\\', '').replace('(', '').replace(')', '')
+
+            # send the conversion in a nice formatted message with a tile and conversion
+            embedConvert = discord.Embed(title = 'Conversion: **' + args[1] + '** → **' + args[2] + '**', \
+                description = '```' + conversion + ' ' + args[2] + '```', color = discord.Colour(0xDC143C))
+
+    await ctx.send(embed = embedConvert)
+
+@bot.command(description = 'Call this command in order to find out all valid inputs to the !convert command')
+async def measurements(ctx):
+
+    # list containing a the valid arguments for the !convert command
+    options = ['————————————————————————————————————',
+               '\t\tVolume Measurements',
+               '————————————————————————————————————',
+               'Teaspoons (tsp):          teaspoon',
+               'Tablespoons (Tbsp):       tablespoon',
+               'Gills (gi):               gill',
+               'Imperial Gills (gi):      UK+gill',
+               'Cups (c):                 cup',
+               'Imperial Cups (c):        UK+cup',
+               'Pints (pt):               pint',
+               'Imperial Pints (pt):      UK+pint',
+               'Imperial Quarts (qt):     UK+quart',
+               'Gallons (gal):            gal',
+               'Imperial Gallons (gal):   UK+gal',
+               '————————————————————————————————————',
+               '\t\tWeight Measurements',
+               '————————————————————————————————————',
+               'Ounces (oz):              oz',
+               'Fluid Ounces (fl. oz.):   fluid+oz',
+               'Grains (gr):              grain',
+               'Grams (g):                g',
+               'Decagrams (dag):          decagram',
+               'Kilograms (kg):           kg',
+               'Pounds (lb):              lb',
+               '————————————————————————————————————',
+               '\t  Temperature Measurements',
+               '————————————————————————————————————',
+               'Celsius (°C):             c',
+               'Fahrenheit (°F):          f',]
+
+    d = '```' + '\n'.join(options) + '```'
+
+    embedUnits = discord.Embed(title = 'Supported Cooking Measurements', description = d, color = discord.Colour(0xDC143C))
+    await ctx.send(embed = embedUnits)
 
     
 bot.run('OTUyMjg0NjE1NTM0NTgzODA4.YizyKA.3fnwxAhIObzZBV_FZ04DsjwSgEM')
