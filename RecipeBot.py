@@ -87,10 +87,10 @@ async def cmds(ctx):
     await ctx.send("\n".join(list_cmds))
 
 # gathering what recipe our bot will search for
-@bot.command(description='Call this command to search for recipes with certain ingredients')
+@bot.command(description='Call this command to search for recipes with certain keywords')
 # adding a cooldown between commands
 @commands.cooldown(1, 5, commands.BucketType.user) 
-async def ingredients(ctx, *, arg):    
+async def keyword(ctx, *, arg):    
     async with ctx.typing():
 
         # begins by getting access to the recipe site we want to use and searches by the users input
@@ -129,6 +129,48 @@ async def ingredients(ctx, *, arg):
         
     await ctx.send(embed=embedRecipe)
 
+# gathering what recipe our bot will search for
+@bot.command(description='Call this command to search for recipes with certain ingredients')
+# adding a cooldown between commands
+@commands.cooldown(1, 5, commands.BucketType.user)
+async def ingredients(ctx, *, arg):
+    async with ctx.typing():
+
+        # begins by getting access to the recipe site we want to use and searches by the users input
+
+        # getting url of our current page, which is going to be the page where the recipes are
+        url = 'https://www.allrecipes.com/search/results/?search=&IngIncl=' + arg.replace(" ", "&IngIncl=")
+
+        # now creating variable r to get access to our url using BeautifulSoup
+        r = requests.get(url)
+        sourcePage = r.text
+
+        soup = BeautifulSoup(sourcePage, 'lxml')
+
+        # going through our web page to find all instances of a certain div
+        random_link = soup.findAll('div', {"class" : "component card card__recipe card__facetedSearchResult"})
+        # grabbing a random link from our list to display to the user
+        # this way they won't see duplicate results as often
+        randomNum = random.randint(0, len(random_link))
+        links = random_link[randomNum].find('a', href=True)
+
+        scraper = scrape_me(links['href'])
+
+
+        # getting access to our desired recipe page to scrape more information
+        r = requests.get(links['href'])
+        sourcePage = r.text
+        soup = BeautifulSoup(sourcePage, 'lxml')
+
+        # scraping through the page to find a description
+        desc = soup.find('p', {"class" : "margin-0-auto"})
+
+        # sending a formatted message with the recipes title, description, link, and image
+        embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
+        embedRecipe.set_image(url="{}".format(scraper.image()))
+
+    await ctx.send(embed=embedRecipe)    
+    
 # sort of overwriting help command to follow a certain format
 class HelpCommand(commands.MinimalHelpCommand):
     async def send_pages(self):
@@ -141,9 +183,7 @@ class HelpCommand(commands.MinimalHelpCommand):
 
 bot.help_command = HelpCommand()
 
-
-
- #starting a timer with argument in minutes
+#starting a timer with argument in minutes
 @bot.command(description='A timer to help with tracking time')
 async def timer(ctx, minutes: int):
     if minutes <0:
