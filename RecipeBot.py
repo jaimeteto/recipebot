@@ -90,7 +90,7 @@ async def cmds(ctx):
 @bot.command(description='Call this command to search for recipes with certain keywords')
 # adding a cooldown between commands
 @commands.cooldown(1, 5, commands.BucketType.user) 
-async def keyword(ctx, *, arg):    
+async def recipes(ctx, *, arg):    
     async with ctx.typing():
 
         # begins by getting access to the recipe site we want to use and searches by the users input
@@ -128,6 +128,36 @@ async def keyword(ctx, *, arg):
         
         
     await ctx.send(embed=embedRecipe)
+    
+    # asks if the user would like a list of ingredients, getting their response via reactions
+    msg = await ctx.send("Would you like a list of ingredients?")
+    await msg.add_reaction('✅')
+    await msg.add_reaction('❌')
+    
+    # a function to check if the user responded with a checkmark
+    def check(reaction, user):
+        return user == ctx.author and str(reaction.emoji) == '✅'
+    
+    # storing ingredients and creating an embed to display to the user
+    ingredients = scraper.ingredients()
+    embedIngredients = discord.Embed(title='List of Ingredients', description="\n".join(ingredients), color=discord.Colour(0x3498DB))
+
+    # try except statement to figure out what to do based on the users response
+    try:
+        await bot.wait_for('reaction_add', timeout=10.0, check=check)
+        await ctx.send(embed=embedIngredients)
+    except asyncio.TimeoutError:
+        await ctx.send("")
+            
+# sort of overwriting help command to follow a certain format
+class HelpCommand(commands.MinimalHelpCommand):
+    async def send_pages(self):
+        # gets all of our commands, and adds its description to our help command
+        destination = self.get_destination()
+        eb = discord.Embed(color=discord.Color.green(), description='')
+        for page in self.paginator.pages:
+            eb.description += page
+        await destination.send(embed=eb)
 
 # gathering what recipe our bot will search for
 @bot.command(description='Call this command to search for recipes with certain ingredients')
@@ -169,7 +199,38 @@ async def ingredients(ctx, *, arg):
         embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
         embedRecipe.set_image(url="{}".format(scraper.image()))
 
-    await ctx.send(embed=embedRecipe)    
+    await ctx.send(embed=embedRecipe)
+    
+    
+    # asks if the user would like a list of ingredients, getting their response via reactions
+    msg = await ctx.send("Would you like a list of ingredients?")
+    await msg.add_reaction('✅')
+    await msg.add_reaction('❌')
+    
+    # a function to check if the user responded with a checkmark
+    def check(reaction, user):
+        return user == ctx.author and str(reaction.emoji) == '✅'
+    
+    # storing ingredients and creating an embed to display to the user
+    ingredients = scraper.ingredients()
+    embedIngredients = discord.Embed(title='List of Ingredients', description="\n".join(ingredients), color=discord.Colour(0x3498DB))
+
+    # try except statement to figure out what to do based on the users response
+    try:
+        await bot.wait_for('reaction_add', timeout=10.0, check=check)
+        await ctx.send(embed=embedIngredients)
+    except asyncio.TimeoutError:
+        await ctx.send("")
+            
+# sort of overwriting help command to follow a certain format
+class HelpCommand(commands.MinimalHelpCommand):
+    async def send_pages(self):
+        # gets all of our commands, and adds its description to our help command
+        destination = self.get_destination()
+        eb = discord.Embed(color=discord.Color.green(), description='')
+        for page in self.paginator.pages:
+            eb.description += page
+        await destination.send(embed=eb)
     
 # sort of overwriting help command to follow a certain format
 class HelpCommand(commands.MinimalHelpCommand):
