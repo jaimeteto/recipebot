@@ -251,16 +251,6 @@ class HelpCommand(commands.MinimalHelpCommand):
         for page in self.paginator.pages:
             eb.description += page
         await destination.send(embed=eb)
-    
-# sort of overwriting help command to follow a certain format
-class HelpCommand(commands.MinimalHelpCommand):
-    async def send_pages(self):
-        # gets all of our commands, and adds its description to our help command
-        destination = self.get_destination()
-        eb = discord.Embed(color=discord.Color.green(), description='')
-        for page in self.paginator.pages:
-            eb.description += page
-        await destination.send(embed=eb)
 
 bot.help_command = HelpCommand()
 
