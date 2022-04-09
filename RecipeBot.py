@@ -168,16 +168,6 @@ async def recipes(ctx, *, arg):
         await ctx.send(embed=embedIngredients)
     except asyncio.TimeoutError:
         await ctx.send("")
-            
-# sort of overwriting help command to follow a certain format
-class HelpCommand(commands.MinimalHelpCommand):
-    async def send_pages(self):
-        # gets all of our commands, and adds its description to our help command
-        destination = self.get_destination()
-        eb = discord.Embed(color=discord.Color.green(), description='')
-        for page in self.paginator.pages:
-            eb.description += page
-        await destination.send(embed=eb)
 
 # gathering what recipe our bot will search for
 @bot.command(description='Call this command to search for recipes with certain ingredients')
