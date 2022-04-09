@@ -81,7 +81,7 @@ async def test(ctx):
     await ctx.send("Command received!")
 
 # list of commands our bot supports
-list_cmds = ["!ingredients", "!recipes"]
+list_cmds = ["!ingredients", "!recipes", "!convert", "!measurements"]
 
 @bot.command()
 async def cmds(ctx):
@@ -127,6 +127,25 @@ async def recipes(ctx, *, arg):
         embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
         embedRecipe.set_image(url="{}".format(scraper.image()))
         
+        # determining in a 1 out of 5 chance to replace the recipe's image with a meme depending on the keyword
+        if (randomNum % 5 == 0):
+            # locate the specific keyword to associate the correct meme or gif
+            if "chocolate" in arg:
+                embedRecipe.set_image(url = "https://media3.giphy.com/media/JpehtCvclNLSE/giphy.gif?cid=790b76111a633b4e28035d07ecd58f69587130f7c54cf3e5&rid=giphy.gif&ct=g")
+            elif "chips" in arg:
+                embedRecipe.set_image(url = "https://c.tenor.com/RuisIo5_WlQAAAAd/awkward.gif")
+            elif "sandwich" in arg:
+                embedRecipe.set_image(url = "https://c.tenor.com/p98d_YNK3K8AAAAC/gordon-ramsay-idiot-sandwich.gif")
+            elif "chili" in arg:
+                embedRecipe.set_image(url = "https://c.tenor.com/x_1Gmh_QmHAAAAAd/office.gif")
+            elif "pancake" in arg:
+                embedRecipe.set_image(url = "https://c.tenor.com/nNuQs8a6O3cAAAAd/pancake-pancake-flip.gif")
+            elif "quinoa" in arg:
+                embedRecipe.set_image(url = "https://i1.wp.com/i.giphy.com/media/8EpFqeoStLm4FLaWxC/giphy.gif")
+            elif "raw" in arg:
+                embedRecipe.set_image(url = "https://media2.giphy.com/media/we4Hp4J3n7riw/200w.webp?cid=ecf05e47lqorkq8o2nt0adybjwztql7ggbb1ly3p05m7ucpd&rid=200w.webp&ct=g")
+            elif "pan" in arg:
+                embedRecipe.set_image(url = "https://c.tenor.com/zYJFQVV7R1AAAAAC/cooking-viralhog.gif")
         
     await ctx.send(embed=embedRecipe)
     
