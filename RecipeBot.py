@@ -92,68 +92,77 @@ async def cmds(ctx):
 # adding a cooldown between commands
 @commands.cooldown(1, 5, commands.BucketType.user) 
 async def recipes(ctx, *, arg):    
-    async with ctx.typing():
 
-        # begins by getting access to the recipe site we want to use and searches by the users input
+    # begins by getting access to the recipe site we want to use and searches by the users input
 
-        # getting url of our current page, which is going to be the page where the recipes are
-        url = 'https://www.allrecipes.com/search/results/?search=' + arg.replace(" ", "+")
+    # getting url of our current page, which is going to be the page where the recipes are
+    url = 'https://www.allrecipes.com/search/results/?search=' + arg.replace(" ", "+")
     
-        # now creating variable r to get access to our url using BeautifulSoup 
-        r = requests.get(url)
-        sourcePage = r.text
-
-        soup = BeautifulSoup(sourcePage, 'lxml')
-
-        # going through our web page to find all instances of a certain div
-        random_link = soup.findAll('div', {"class" : "component card card__recipe card__facetedSearchResult"})
-        # grabbing a random link from our list to display to the user
-        # this way they won't see duplicate results as often
-        randomNum = random.randint(0, len(random_link))
-        links = random_link[randomNum].find('a', href=True)
+    # now creating variable r to get access to our url using BeautifulSoup 
+    r = requests.get(url)
+    sourcePage = r.text
+    soup = BeautifulSoup(sourcePage, 'lxml')
         
-        scraper = scrape_me(links['href'])
+    # handling the cases where the users search might yield no results
+    check_result = soup.findAll('div', {"class" : "searchResults__noResultsContainer"})
+    for i in check_result:
+        if (i.find('p').text.strip() == 'Check your spelling, try a more generic term, or less terms'):
+            await ctx.trigger_typing()
+            await asyncio.sleep(0.5)
+            await ctx.send("No results found, please try again")
+            return
+        
+    # going through our web page to find all instances of a certain div
+    random_link = soup.findAll('div', {"class" : "component card card__recipe card__facetedSearchResult"})
+    # grabbing a random link from our list to display to the user
+    # this way they won't see duplicate results as often
+    randomNum = random.randint(0, len(random_link))
+    links = random_link[randomNum].find('a', href=True)
+        
+    scraper = scrape_me(links['href'])
     
         
-        # getting access to our desired recipe page to scrape more information
-        r = requests.get(links['href'])
-        sourcePage = r.text
-        soup = BeautifulSoup(sourcePage, 'lxml')
+    # getting access to our desired recipe page to scrape more information
+    r = requests.get(links['href'])
+    sourcePage = r.text
+    soup = BeautifulSoup(sourcePage, 'lxml')
 
-        # scraping through the page to find a description
-        desc = soup.find('p', {"class" : "margin-0-auto"})
+    # scraping through the page to find a description
+    desc = soup.find('p', {"class" : "margin-0-auto"})
     
-        # sending a formatted message with the recipes title, description, link, and image
-        embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
-        embedRecipe.set_image(url="{}".format(scraper.image()))
+    # sending a formatted message with the recipes title, description, link, and image
+    embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
+    embedRecipe.set_image(url="{}".format(scraper.image()))
         
-        # determining in a 1 out of 5 chance to replace the recipe's image with a meme depending on the keyword
-        if (randomNum % 5 == 0):
-            # locate the specific keyword to associate the correct meme or gif
-            if "chocolate" in arg:
-                embedRecipe.set_image(url = "https://media3.giphy.com/media/JpehtCvclNLSE/giphy.gif?cid=790b76111a633b4e28035d07ecd58f69587130f7c54cf3e5&rid=giphy.gif&ct=g")
-            elif "chips" in arg:
-                embedRecipe.set_image(url = "https://c.tenor.com/RuisIo5_WlQAAAAd/awkward.gif")
-            elif "sandwich" in arg:
-                embedRecipe.set_image(url = "https://c.tenor.com/p98d_YNK3K8AAAAC/gordon-ramsay-idiot-sandwich.gif")
-            elif "chili" in arg:
-                embedRecipe.set_image(url = "https://c.tenor.com/x_1Gmh_QmHAAAAAd/office.gif")
-            elif "pancake" in arg:
-                embedRecipe.set_image(url = "https://c.tenor.com/nNuQs8a6O3cAAAAd/pancake-pancake-flip.gif")
-            elif "quinoa" in arg:
-                embedRecipe.set_image(url = "https://i1.wp.com/i.giphy.com/media/8EpFqeoStLm4FLaWxC/giphy.gif")
-            elif "raw" in arg:
-                embedRecipe.set_image(url = "https://media2.giphy.com/media/we4Hp4J3n7riw/200w.webp?cid=ecf05e47lqorkq8o2nt0adybjwztql7ggbb1ly3p05m7ucpd&rid=200w.webp&ct=g")
-            elif "pan" in arg:
-                embedRecipe.set_image(url = "https://c.tenor.com/zYJFQVV7R1AAAAAC/cooking-viralhog.gif")
-        
+    # determining in a 1 out of 5 chance to replace the recipe's image with a meme depending on the keyword
+    if (randomNum % 5 == 0):
+        # locate the specific keyword to associate the correct meme or gif
+        if "chocolate" in arg:
+            embedRecipe.set_image(url = "https://media3.giphy.com/media/JpehtCvclNLSE/giphy.gif?cid=790b76111a633b4e28035d07ecd58f69587130f7c54cf3e5&rid=giphy.gif&ct=g")
+        elif "chips" in arg:
+             embedRecipe.set_image(url = "https://c.tenor.com/RuisIo5_WlQAAAAd/awkward.gif")
+        elif "sandwich" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/p98d_YNK3K8AAAAC/gordon-ramsay-idiot-sandwich.gif")
+        elif "chili" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/x_1Gmh_QmHAAAAAd/office.gif")
+        elif "pancake" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/nNuQs8a6O3cAAAAd/pancake-pancake-flip.gif")
+        elif "quinoa" in arg:
+            embedRecipe.set_image(url = "https://i1.wp.com/i.giphy.com/media/8EpFqeoStLm4FLaWxC/giphy.gif")
+        elif "raw" in arg:
+            embedRecipe.set_image(url = "https://media2.giphy.com/media/we4Hp4J3n7riw/200w.webp?cid=ecf05e47lqorkq8o2nt0adybjwztql7ggbb1ly3p05m7ucpd&rid=200w.webp&ct=g")
+        elif "pan" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/zYJFQVV7R1AAAAAC/cooking-viralhog.gif")
+
+    await ctx.trigger_typing()
+    await asyncio.sleep(0.5)
     await ctx.send(embed=embedRecipe)
     
     # asks if the user would like a list of ingredients, getting their response via reactions
     msg = await ctx.send("Would you like a list of ingredients?")
     await msg.add_reaction('✅')
     await msg.add_reaction('❌')
-
+    
     # storing ingredients and creating an embed to display to the user
     ingredients = scraper.ingredients()
     embedIngredients = discord.Embed(title='List of Ingredients', description="\n".join(ingredients), color=discord.Colour(0x3498DB))
@@ -162,24 +171,26 @@ async def recipes(ctx, *, arg):
     try:
         reaction, user = await bot.wait_for('reaction_add')
         while user == bot.user:
-            reaction, user = await bot.wait_for('reaction_add', timeout=10.0)
+            reaction, user = await bot.wait_for('reaction_add', timeout=5.0)
         if str(reaction.emoji) == '✅':
+            await ctx.trigger_typing()
+            await asyncio.sleep(0.5)
             await ctx.send(embed=embedIngredients)
         elif str(reaction.emoji) == '❌':
             await ctx.send("https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
     except asyncio.TimeoutError:
         await ctx.send("")
-    
+
     # new message to ask if the user wants to get another recipe with the same arguments
     msgRefresh = await ctx.send("Would you like a different recipe?")
     await msgRefresh.add_reaction('🔄')
     await msgRefresh.add_reaction('❌')
-    # check if the user responded with a refresh emoji
+    # a function to check if the user responded with a refresh emoji
     def check(reaction, user):
         return user == ctx.author and str(reaction.emoji) == '🔄'
     # try except statement to decide on recalling the command again
     try:
-        await bot.wait_for('reaction_add', timeout=10.0, check=check)
+        await bot.wait_for('reaction_add', timeout=5.0, check=check)
         await recipes(ctx = ctx, arg = arg)
     except asyncio.TimeoutError:
         await ctx.send("")
@@ -189,48 +200,61 @@ async def recipes(ctx, *, arg):
 # adding a cooldown between commands
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def ingredients(ctx, *, arg):
-    async with ctx.typing():
-
-        # begins by getting access to the recipe site we want to use and searches by the users input
-
-        # getting url of our current page, which is going to be the page where the recipes are
-        url = 'https://www.allrecipes.com/search/results/?search=&IngIncl=' + arg.replace(" ", "&IngIncl=")
-
-        # now creating variable r to get access to our url using BeautifulSoup
-        r = requests.get(url)
-        sourcePage = r.text
-
-        soup = BeautifulSoup(sourcePage, 'lxml')
-
-        # going through our web page to find all instances of a certain div
-        random_link = soup.findAll('div', {"class" : "component card card__recipe card__facetedSearchResult"})
-        # grabbing a random link from our list to display to the user
-        # this way they won't see duplicate results as often
-        randomNum = random.randint(0, len(random_link))
-        links = random_link[randomNum].find('a', href=True)
-
-        scraper = scrape_me(links['href'])
 
 
-        # getting access to our desired recipe page to scrape more information
-        r = requests.get(links['href'])
-        sourcePage = r.text
-        soup = BeautifulSoup(sourcePage, 'lxml')
+    # begins by getting access to the recipe site we want to use and searches by the users input
 
-        # scraping through the page to find a description
-        desc = soup.find('p', {"class" : "margin-0-auto"})
+    # getting url of our current page, which is going to be the page where the recipes are
+    url = 'https://www.allrecipes.com/search/results/?search=&IngIncl=' + arg.replace(" ", "&IngIncl=")
 
-        # sending a formatted message with the recipes title, description, link, and image
-        embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
-        embedRecipe.set_image(url="{}".format(scraper.image()))
+    # now creating variable r to get access to our url using BeautifulSoup
+    r = requests.get(url)
+    sourcePage = r.text
 
+    soup = BeautifulSoup(sourcePage, 'lxml')
+
+    # handling the cases where the users search might yield no results
+    check_result = soup.findAll('div', {"class" : "searchResults__noResultsContainer"})
+    for x in check_result:
+        if (x.find('p').text.strip() == 'Check your spelling, try a more generic term, or less terms'):
+            await ctx.trigger_typing()
+            await asyncio.sleep(0.5)
+            await ctx.send("No results found, please try again")
+            return
+
+
+    # going through our web page to find all instances of a certain div
+    random_link = soup.findAll('div', {"class" : "component card card__recipe card__facetedSearchResult"})
+    # grabbing a random link from our list to display to the user
+    # this way they won't see duplicate results as often
+    randomNum = random.randint(0, len(random_link))
+    links = random_link[randomNum].find('a', href=True)
+
+    scraper = scrape_me(links['href'])
+
+
+    # getting access to our desired recipe page to scrape more information
+    r = requests.get(links['href'])
+    sourcePage = r.text
+    soup = BeautifulSoup(sourcePage, 'lxml')
+
+    # scraping through the page to find a description
+    desc = soup.find('p', {"class" : "margin-0-auto"})
+
+    # sending a formatted message with the recipes title, description, link, and image
+    embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
+    embedRecipe.set_image(url="{}".format(scraper.image()))
+
+    await ctx.trigger_typing()
+    await asyncio.sleep(0.5)
     await ctx.send(embed=embedRecipe)
-       
+    
     # asks if the user would like a list of ingredients, getting their response via reactions
     msg = await ctx.send("Would you like a list of ingredients?")
     await msg.add_reaction('✅')
     await msg.add_reaction('❌')
-
+    
+    
     # storing ingredients and creating an embed to display to the user
     ingredients = scraper.ingredients()
     embedIngredients = discord.Embed(title='List of Ingredients', description="\n".join(ingredients), color=discord.Colour(0x3498DB))
@@ -239,24 +263,26 @@ async def ingredients(ctx, *, arg):
     try:
         reaction, user = await bot.wait_for('reaction_add')
         while user == bot.user:
-            reaction, user = await bot.wait_for('reaction_add', timeout=10.0)
+            reaction, user = await bot.wait_for('reaction_add', timeout=5.0)
         if str(reaction.emoji) == '✅':
+            await ctx.trigger_typing()
+            await asyncio.sleep(0.5)
             await ctx.send(embed=embedIngredients)
         elif str(reaction.emoji) == '❌':
             await ctx.send("https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
     except asyncio.TimeoutError:
         await ctx.send("")
-    
+
     # new message to ask if the user wants to get another recipe with the same arguments
     msgRefresh = await ctx.send("Would you like a different recipe?")
     await msgRefresh.add_reaction('🔄')
     await msgRefresh.add_reaction('❌')
-    # check if the user responded with a refresh emoji
+    # a function to check if the user responded with a refresh emoji
     def check(reaction, user):
         return user == ctx.author and str(reaction.emoji) == '🔄'
     # try except statement to decide on recalling the command again
     try:
-        await bot.wait_for('reaction_add', timeout=10.0, check=check)
+        await bot.wait_for('reaction_add', timeout=5.0, check=check)
         await recipes(ctx = ctx, arg = arg)
     except asyncio.TimeoutError:
         await ctx.send("")
@@ -266,41 +292,52 @@ async def ingredients(ctx, *, arg):
 # adding a cooldown between commands
 @commands.cooldown(1, 5, commands.BucketType.user)
 async def exclude(ctx, *, arg):
-    async with ctx.typing():
+    
 
-        # begins by getting access to the recipe site we want to use and searches by the users input
+    # begins by getting access to the recipe site we want to use and searches by the users input
 
-        # getting url of our current page, which is going to be the page where the recipes are
-        url = 'https://www.allrecipes.com/search/results/?search=&IngExcl=' + arg.replace(" ", "&IngExcl=")
+    # getting url of our current page, which is going to be the page where the recipes are
+    url = 'https://www.allrecipes.com/search/results/?search=&IngExcl=' + arg.replace(" ", "&IngExcl=")
 
-        # now creating variable r to get access to our url using BeautifulSoup
-        r = requests.get(url)
-        sourcePage = r.text
+    # now creating variable r to get access to our url using BeautifulSoup
+    r = requests.get(url)
+    sourcePage = r.text
 
-        soup = BeautifulSoup(sourcePage, 'lxml')
+    soup = BeautifulSoup(sourcePage, 'lxml')
 
-        # going through our web page to find all instances of a certain div
-        random_link = soup.findAll('div', {"class" : "component card card__recipe card__facetedSearchResult"})
-        # grabbing a random link from our list to display to the user
-        # this way they won't see duplicate results as often
-        randomNum = random.randint(0, len(random_link))
-        links = random_link[randomNum].find('a', href=True)
+    # handling the cases where the users search might yield no results
+    check_result = soup.findAll('div', {"class" : "searchResults__noResultsContainer"})
+    for i in check_result:
+        if (i.find('p').text.strip() == 'Check your spelling, try a more generic term, or less terms'):
+            await ctx.trigger_typing()
+            await asyncio.sleep(0.5)
+            await ctx.send("No results found, please try again")
+            return
 
-        scraper = scrape_me(links['href'])
+    # going through our web page to find all instances of a certain div
+    random_link = soup.findAll('div', {"class" : "component card card__recipe card__facetedSearchResult"})
+    # grabbing a random link from our list to display to the user
+    # this way they won't see duplicate results as often
+    randomNum = random.randint(0, len(random_link))
+    links = random_link[randomNum].find('a', href=True)
+
+    scraper = scrape_me(links['href'])
 
 
-        # getting access to our desired recipe page to scrape more information
-        r = requests.get(links['href'])
-        sourcePage = r.text
-        soup = BeautifulSoup(sourcePage, 'lxml')
+    # getting access to our desired recipe page to scrape more information
+    r = requests.get(links['href'])
+    sourcePage = r.text
+    soup = BeautifulSoup(sourcePage, 'lxml')
 
-        # scraping through the page to find a description
-        desc = soup.find('p', {"class" : "margin-0-auto"})
+    # scraping through the page to find a description
+    desc = soup.find('p', {"class" : "margin-0-auto"})
 
-        # sending a formatted message with the recipes title, description, link, and image
-        embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
-        embedRecipe.set_image(url="{}".format(scraper.image()))
+    # sending a formatted message with the recipes title, description, link, and image
+    embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
+    embedRecipe.set_image(url="{}".format(scraper.image()))
 
+    await ctx.trigger_typing()
+    await asyncio.sleep(0.5)
     await ctx.send(embed=embedRecipe)
 
 
@@ -308,6 +345,7 @@ async def exclude(ctx, *, arg):
     msg = await ctx.send("Would you like a list of ingredients?")
     await msg.add_reaction('✅')
     await msg.add_reaction('❌')
+
 
     # storing ingredients and creating an embed to display to the user
     ingredients = scraper.ingredients()
@@ -317,24 +355,26 @@ async def exclude(ctx, *, arg):
     try:
         reaction, user = await bot.wait_for('reaction_add')
         while user == bot.user:
-            reaction, user = await bot.wait_for('reaction_add', timeout=10.0)
+            reaction, user = await bot.wait_for('reaction_add', timeout=5.0)
         if str(reaction.emoji) == '✅':
+            await ctx.trigger_typing()
+            await asyncio.sleep(0.5)
             await ctx.send(embed=embedIngredients)
         elif str(reaction.emoji) == '❌':
             await ctx.send("https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
     except asyncio.TimeoutError:
         await ctx.send("")
-    
+
     # new message to ask if the user wants to get another recipe with the same arguments
     msgRefresh = await ctx.send("Would you like a different recipe?")
     await msgRefresh.add_reaction('🔄')
     await msgRefresh.add_reaction('❌')
-    # check if the user responded with a refresh emoji
+    # a function to check if the user responded with a refresh emoji
     def check(reaction, user):
         return user == ctx.author and str(reaction.emoji) == '🔄'
     # try except statement to decide on recalling the command again
     try:
-        await bot.wait_for('reaction_add', timeout=10.0, check=check)
+        await bot.wait_for('reaction_add', timeout=5.0, check=check)
         await recipes(ctx = ctx, arg = arg)
     except asyncio.TimeoutError:
         await ctx.send("")
