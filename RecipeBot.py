@@ -81,7 +81,7 @@ async def test(ctx):
     await ctx.send("Command received!")
 
 # list of commands our bot supports
-list_cmds = ["!ingredients", "!recipes", "!convert", "!measurements"]
+list_cmds = ["!recipes", "!ingredients", "!exclude", "!convert", "!measurements"]
 
 @bot.command()
 async def cmds(ctx):
@@ -153,19 +153,34 @@ async def recipes(ctx, *, arg):
     msg = await ctx.send("Would you like a list of ingredients?")
     await msg.add_reaction('✅')
     await msg.add_reaction('❌')
-    
-    # a function to check if the user responded with a checkmark
-    def check(reaction, user):
-        return user == ctx.author and str(reaction.emoji) == '✅'
-    
+
     # storing ingredients and creating an embed to display to the user
     ingredients = scraper.ingredients()
     embedIngredients = discord.Embed(title='List of Ingredients', description="\n".join(ingredients), color=discord.Colour(0x3498DB))
 
     # try except statement to figure out what to do based on the users response
     try:
+        reaction, user = await bot.wait_for('reaction_add')
+        while user == bot.user:
+            reaction, user = await bot.wait_for('reaction_add', timeout=10.0)
+        if str(reaction.emoji) == '✅':
+            await ctx.send(embed=embedIngredients)
+        elif str(reaction.emoji) == '❌':
+            await ctx.send("https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
+    except asyncio.TimeoutError:
+        await ctx.send("")
+    
+    # new message to ask if the user wants to get another recipe with the same arguments
+    msgRefresh = await ctx.send("Would you like a different recipe?")
+    await msgRefresh.add_reaction('🔄')
+    await msgRefresh.add_reaction('❌')
+    # check if the user responded with a refresh emoji
+    def check(reaction, user):
+        return user == ctx.author and str(reaction.emoji) == '🔄'
+    # try except statement to decide on recalling the command again
+    try:
         await bot.wait_for('reaction_add', timeout=10.0, check=check)
-        await ctx.send(embed=embedIngredients)
+        await recipes(ctx = ctx, arg = arg)
     except asyncio.TimeoutError:
         await ctx.send("")
 
@@ -210,25 +225,39 @@ async def ingredients(ctx, *, arg):
         embedRecipe.set_image(url="{}".format(scraper.image()))
 
     await ctx.send(embed=embedRecipe)
-    
-    
+       
     # asks if the user would like a list of ingredients, getting their response via reactions
     msg = await ctx.send("Would you like a list of ingredients?")
     await msg.add_reaction('✅')
     await msg.add_reaction('❌')
-    
-    # a function to check if the user responded with a checkmark
-    def check(reaction, user):
-        return user == ctx.author and str(reaction.emoji) == '✅'
-    
+
     # storing ingredients and creating an embed to display to the user
     ingredients = scraper.ingredients()
     embedIngredients = discord.Embed(title='List of Ingredients', description="\n".join(ingredients), color=discord.Colour(0x3498DB))
 
     # try except statement to figure out what to do based on the users response
     try:
+        reaction, user = await bot.wait_for('reaction_add')
+        while user == bot.user:
+            reaction, user = await bot.wait_for('reaction_add', timeout=10.0)
+        if str(reaction.emoji) == '✅':
+            await ctx.send(embed=embedIngredients)
+        elif str(reaction.emoji) == '❌':
+            await ctx.send("https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
+    except asyncio.TimeoutError:
+        await ctx.send("")
+    
+    # new message to ask if the user wants to get another recipe with the same arguments
+    msgRefresh = await ctx.send("Would you like a different recipe?")
+    await msgRefresh.add_reaction('🔄')
+    await msgRefresh.add_reaction('❌')
+    # check if the user responded with a refresh emoji
+    def check(reaction, user):
+        return user == ctx.author and str(reaction.emoji) == '🔄'
+    # try except statement to decide on recalling the command again
+    try:
         await bot.wait_for('reaction_add', timeout=10.0, check=check)
-        await ctx.send(embed=embedIngredients)
+        await recipes(ctx = ctx, arg = arg)
     except asyncio.TimeoutError:
         await ctx.send("")
             
@@ -280,18 +309,33 @@ async def exclude(ctx, *, arg):
     await msg.add_reaction('✅')
     await msg.add_reaction('❌')
 
-    # a function to check if the user responded with a checkmark
-    def check(reaction, user):
-        return user == ctx.author and str(reaction.emoji) == '✅'
-
     # storing ingredients and creating an embed to display to the user
     ingredients = scraper.ingredients()
     embedIngredients = discord.Embed(title='List of Ingredients', description="\n".join(ingredients), color=discord.Colour(0x3498DB))
 
     # try except statement to figure out what to do based on the users response
     try:
+        reaction, user = await bot.wait_for('reaction_add')
+        while user == bot.user:
+            reaction, user = await bot.wait_for('reaction_add', timeout=10.0)
+        if str(reaction.emoji) == '✅':
+            await ctx.send(embed=embedIngredients)
+        elif str(reaction.emoji) == '❌':
+            await ctx.send("https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
+    except asyncio.TimeoutError:
+        await ctx.send("")
+    
+    # new message to ask if the user wants to get another recipe with the same arguments
+    msgRefresh = await ctx.send("Would you like a different recipe?")
+    await msgRefresh.add_reaction('🔄')
+    await msgRefresh.add_reaction('❌')
+    # check if the user responded with a refresh emoji
+    def check(reaction, user):
+        return user == ctx.author and str(reaction.emoji) == '🔄'
+    # try except statement to decide on recalling the command again
+    try:
         await bot.wait_for('reaction_add', timeout=10.0, check=check)
-        await ctx.send(embed=embedIngredients)
+        await recipes(ctx = ctx, arg = arg)
     except asyncio.TimeoutError:
         await ctx.send("")
           
