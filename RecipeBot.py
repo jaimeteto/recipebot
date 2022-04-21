@@ -16,7 +16,7 @@ from selenium.webdriver.common.by import By
 from discord.ext import commands
 from bs4 import BeautifulSoup
 from recipe_scrapers import scrape_me
-
+from discord_components import DiscordComponents,ComponentsBot,Button,SelectOption,Select
 
 # ignoring certain errors that may pop up
 options = webdriver.ChromeOptions()
@@ -54,6 +54,13 @@ img_id = []
 
 # setting up bot to register commands that start with an !
 bot = commands.Bot(command_prefix='!')
+
+
+
+#starting dicordComponets on bot
+DiscordComponents(bot)
+
+
 
 # registering events using a callback
 
@@ -391,15 +398,7 @@ class HelpCommand(commands.MinimalHelpCommand):
 
 bot.help_command = HelpCommand()
 
-#starting a timer with argument in minutes
-@bot.command(description='A timer to help with tracking time')
-async def timer(ctx, minutes: int):
-    if minutes <0:
-      await ctx.send("number can't be a negative")
-    else:
-      await ctx.send("time set to:"+ str(minutes))
-      time.sleep(minutes *60)
-      await ctx.send("Timer has ended")
+
       
 # give a table containing all conversions for the user input
 @bot.command(description='Call this command to convert a number from one unit of measurement to another.'\
@@ -479,6 +478,162 @@ async def measurements(ctx):
 
     embedUnits = discord.Embed(title = 'Supported Cooking Measurements', description = d, color = discord.Colour(0xDC143C))
     await ctx.send(embed = embedUnits)
+
+
+#timer fucntion format: <Timer name> <minutes> <seconds>
+@bot.command(description='A timer to help with tracking time')
+async def timer(ctx,name:str,minutes:int,seconds=0):
+
+    totalTime= ((minutes*60) + seconds)
+
+    #time in seconds since Unix epoch
+    currentTime = time.time()
+    targetTime = totalTime + currentTime
+   
+    
+    
+    # no negative inputs
+    if minutes <0 or seconds< 0:
+        await ctx.send("number can't be a negative")
+    else:
+
+        
+        #initial display
+        embedVar1 = discord.Embed(title="Timer", description= f"Timer set by:{ctx.message.author.mention} ", color=0x336EFF)
+        embedVar1.add_field(name=f"{name}",value = "timer name", inline=False)
+        embedVar1.add_field(name=f"time set to:",value =  f"{minutes} minutes:{seconds} seconds", inline=False)
+        embedVar1.add_field(name=f"Timer:{minutes}:{seconds}", value=f"{minutes}:{seconds}", inline=False)
+    
+        message1 = await ctx.send(embed = embedVar1)
+
+        # loop used to display and edit timer in message
+        while targetTime>currentTime:
+            currentTime = time.time()
+
+            #difference between times
+            timeDifference = targetTime - currentTime
+            embedVar2 = discord.Embed(title=f"Timer for: {name}", description= f"Timer set by:{ctx.message.author.mention}", color=0x336EFF)
+            
+
+            #editing counter after each iteration.
+            embedVar2.add_field(name=f"Time set to:",value =  f"{minutes} minutes:{seconds} seconds", inline=False)
+            embedVar2.add_field(name=f"Timer:", value=f"{int(timeDifference/60)}:{int(60*((timeDifference/60)-int(timeDifference/60)))}", inline=False)
+            await message1.edit(embed = embedVar2)
+
+        # making sure timer displays 0:0 when it terminates  
+        embedVar2.add_field(name=f"Time set to:",value =  f"{minutes} minutes:{seconds} seconds", inline=False)
+        embedVar2.add_field(name=f"Timer:", value=f"0:0", inline=False)
+        await message1.edit(embed = embedVar2)
+
+
+
+        embedVar = discord.Embed(title=f"Timer for {name} has ended", description= f"Timer set by:{ctx.message.author.mention}", color=0x336EFF)
+        
+
+        await ctx.send(embed=embedVar)
+
+
+
+
+
+
+#method used to search recipes for a given category
+def search(category):
+
+    #categories urls (breakfast, lunch, dinner)
+    lunch ='https://www.allrecipes.com/recipes/17561/lunch/'
+    breakfast ='https://www.allrecipes.com/recipes/78/breakfast-and-brunch/'
+    dinner = 'https://www.allrecipes.com/recipes/17562/dinner/'
+    mexican = 'https://www.allrecipes.com/recipes/728/world-cuisine/latin-american/mexican/'
+    chinese = 'https://www.allrecipes.com/recipes/695/world-cuisine/asian/chinese/'
+    italian = 'https://www.allrecipes.com/recipes/723/world-cuisine/european/italian/'
+    lowcalorie = 'https://www.allrecipes.com/recipes/1232/healthy-recipes/low-calorie/'
+
+    #getting driver according to category
+    if category == "lunch":
+        driver.get(lunch)
+    elif category== "breakfast":
+        driver.get(breakfast)
+    elif category== "dinner":
+        driver.get(dinner)
+    elif category== "mexican":
+        driver.get(mexican)
+    elif category =="chinese":
+        driver.get(chinese)
+    elif category =="italian":
+        driver.get(italian)
+    elif category ==("lowCalorie"):
+        driver.get(lowcalorie)
+    # getting url of our current page, which is going to be the page where the recipes are
+    url = driver.current_url
+    
+    # now creating variable r to get access to our url using BeautifulSoup 
+    r = requests.get(url)
+    sourcePage = r.content
+
+    soup = BeautifulSoup(sourcePage, 'lxml')
+    
+    # going through web page to find all instances of a certain div
+    random_link = soup.findAll('a', {"class" : "card__titleLink manual-link-behavior elementFont__titleLink margin-8-bottom"}, limit = 4)
+    # grabbing a random link from our list to display to the user
+    # this way they won't see duplicate results as often
+    randomNum = random.randint(0, len(random_link)-1)
+    #getting link from div
+    link = random_link[randomNum].get('href')
+        
+    scraper = scrape_me(link)
+    
+        
+    # getting access to our desired recipe page to scrape more information
+    r = requests.get(link)
+    sourcePage = r.content
+    soup = BeautifulSoup(sourcePage, 'lxml')
+
+
+    # scraping through the page to find a description
+    desc = soup.find('p', {"class" : "margin-0-auto"})
+
+    # sending a formatted message with the recipes title, description, link, and image
+    embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = link)
+    embedRecipe.set_image(url="{}".format(scraper.image()))
+
+     
+   
+    return embedRecipe
+    
+@bot.command()
+async def categories(ctx):
+
+    #Drop down menu
+    await ctx.send("categories",components=[
+        Select(
+            placeholder= "select a category", 
+            options=[
+                SelectOption(label= "Lunch",value = 'lunch'),
+                SelectOption(label= "Breakfast",value = 'breakfast'),
+                SelectOption(label= "Dinner",value = 'dinner'),
+                SelectOption(label= "Mexican",value = 'mexican'),
+                SelectOption(label= "Italian", value= 'italian'),
+                SelectOption(label= "Chinese", value = 'chinese'),
+                SelectOption(label= "Low-Calorie", value = 'lowCalorie'),
+            ],custom_id="select1",
+        )
+            ],
+                 )
+   
+
+#event created after selecting a category  
+@bot.event
+async def on_select_option(interaction):
+    
+   # provide more timer for interaction
+    await interaction.defer(ephemeral= False)
+    
+    #searching for a recipe
+    embed1 =search(interaction.values[0])
+    
+
+    await interaction.respond(embed = embed1)
 
     
 bot.run('OTUyMjg0NjE1NTM0NTgzODA4.YizyKA.3fnwxAhIObzZBV_FZ04DsjwSgEM')
