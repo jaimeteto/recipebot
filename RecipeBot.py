@@ -512,18 +512,18 @@ async def timer(ctx,name:str,minutes:int,seconds=0):
 
             #difference between times
             timeDifference = targetTime - currentTime
-            embedVar2 = discord.Embed(title=f"Timer for: {name}", description= f"Timer set by:{ctx.message.author.mention}", color=0x336EFF)
-            
 
             #editing counter after each iteration.
+            embedVar2 = discord.Embed(title=f"Timer for: {name}", description= f"Timer set by:{ctx.message.author.mention}", color=0x336EFF)
             embedVar2.add_field(name=f"Time set to:",value =  f"{minutes} minutes:{seconds} seconds", inline=False)
             embedVar2.add_field(name=f"Timer:", value=f"{int(timeDifference/60)}:{int(60*((timeDifference/60)-int(timeDifference/60)))}", inline=False)
             await message1.edit(embed = embedVar2)
 
-        # making sure timer displays 0:0 when it terminates  
-        embedVar2.add_field(name=f"Time set to:",value =  f"{minutes} minutes:{seconds} seconds", inline=False)
-        embedVar2.add_field(name=f"Timer:", value=f"0:0", inline=False)
-        await message1.edit(embed = embedVar2)
+        # making sure timer displays 0:0 when it terminates
+        embedVar3 = discord.Embed(title=f"Timer for: {name}", description= f"Timer set by:{ctx.message.author.mention}", color=0x336EFF)
+        embedVar3.add_field(name=f"Time set to:",value =  f"{minutes} minutes:{seconds} seconds", inline=False)
+        embedVar3.add_field(name=f"Timer:", value="0:0", inline=False)
+        await message1.edit(embed = embedVar3)
 
 
 
@@ -636,4 +636,4 @@ async def on_select_option(interaction):
     await interaction.respond(embed = embed1)
 
     
-bot.run('OTUyMjg0NjE1NTM0NTgzODA4.YizyKA.3fnwxAhIObzZBV_FZ04DsjwSgEM')
+bot.run('OTU1ODgzMzIxNDc1MzQ2NDky.YjoJtw.2yj-VY4OEeMefKtFNjhJihFwrJo')
