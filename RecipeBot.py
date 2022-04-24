@@ -149,7 +149,10 @@ async def recipes(ctx, *, arg):
         elif "chips" in arg:
              embedRecipe.set_image(url = "https://c.tenor.com/RuisIo5_WlQAAAAd/awkward.gif")
         elif "sandwich" in arg:
-            embedRecipe.set_image(url = "https://c.tenor.com/p98d_YNK3K8AAAAC/gordon-ramsay-idiot-sandwich.gif")
+            if (randomNum % 2 == 0):
+                embedRecipe.set_image(url = "https://c.tenor.com/8PHh0EUxLFwAAAAM/drop-down-failarmy.gif")
+            else:
+                embedRecipe.set_image(url = "https://c.tenor.com/p98d_YNK3K8AAAAC/gordon-ramsay-idiot-sandwich.gif")
         elif "chili" in arg:
             embedRecipe.set_image(url = "https://c.tenor.com/x_1Gmh_QmHAAAAAd/office.gif")
         elif "pancake" in arg:
@@ -160,6 +163,14 @@ async def recipes(ctx, *, arg):
             embedRecipe.set_image(url = "https://media2.giphy.com/media/we4Hp4J3n7riw/200w.webp?cid=ecf05e47lqorkq8o2nt0adybjwztql7ggbb1ly3p05m7ucpd&rid=200w.webp&ct=g")
         elif "pan" in arg:
             embedRecipe.set_image(url = "https://c.tenor.com/zYJFQVV7R1AAAAAC/cooking-viralhog.gif")
+        elif "hotdog" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/GB-11l60LwYAAAAd/hotdog-fingers-playing-with-meat.gif")
+        elif "pizza" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/9q7E1GsL-hQAAAAd/wasted-pizza-failarmy.gif")
+        elif "salad" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/Fyf-HQ5CgZcAAAAC/salad-funny.gif")
+        elif "fries" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/rUdNSJQOiU8AAAAC/dechartgames-hungry-garden.gif")
 
     await ctx.trigger_typing()
     await asyncio.sleep(0.5)
@@ -252,6 +263,24 @@ async def ingredients(ctx, *, arg):
     embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
     embedRecipe.set_image(url="{}".format(scraper.image()))
 
+    # determining in a 1 out of 5 chance to replace the recipe's image with a meme depending on the keyword
+    if (randomNum % 2 == 0):
+        # locate the specific keyword to associate the correct meme or gif
+        if "chocolate" in arg:
+            embedRecipe.set_image(url = "https://media3.giphy.com/media/JpehtCvclNLSE/giphy.gif?cid=790b76111a633b4e28035d07ecd58f69587130f7c54cf3e5&rid=giphy.gif&ct=g")
+        elif "quinoa" in arg:
+            embedRecipe.set_image(url = "https://i1.wp.com/i.giphy.com/media/8EpFqeoStLm4FLaWxC/giphy.gif")
+        elif "flour" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/ab3DJeJOmJQAAAAd/cake-mistake.gif")
+        elif "chicken" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/4kVtSIKi46YAAAAC/chicken-starbucks.gif")
+        elif "broccoli" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/pfPkY9-DrEMAAAAC/broccoli-eat-me.gif")
+        elif "potato" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/G24ZSNHLmRUAAAAC/yahia-potato.gif")
+        elif "milk" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/9wGf-oOHKMsAAAAd/cow-cow-milk.gif")
+    
     await ctx.trigger_typing()
     await asyncio.sleep(0.5)
     await ctx.send(embed=embedRecipe)
@@ -490,14 +519,10 @@ async def timer(ctx,name:str,minutes:int,seconds=0):
     currentTime = time.time()
     targetTime = totalTime + currentTime
    
-    
-    
     # no negative inputs
     if minutes <0 or seconds< 0:
         await ctx.send("number can't be a negative")
     else:
-
-        
         #initial display
         embedVar1 = discord.Embed(title="Timer", description= f"Timer set by:{ctx.message.author.mention} ", color=0x336EFF)
         embedVar1.add_field(name=f"{name}",value = "timer name", inline=False)
@@ -525,17 +550,9 @@ async def timer(ctx,name:str,minutes:int,seconds=0):
         embedVar3.add_field(name=f"Timer:", value="0:0", inline=False)
         await message1.edit(embed = embedVar3)
 
-
-
         embedVar = discord.Embed(title=f"Timer for {name} has ended", description= f"Timer set by:{ctx.message.author.mention}", color=0x336EFF)
         
-
         await ctx.send(embed=embedVar)
-
-
-
-
-
 
 #method used to search recipes for a given category
 def search(category):
@@ -582,13 +599,11 @@ def search(category):
     link = random_link[randomNum].get('href')
         
     scraper = scrape_me(link)
-    
         
     # getting access to our desired recipe page to scrape more information
     r = requests.get(link)
     sourcePage = r.content
     soup = BeautifulSoup(sourcePage, 'lxml')
-
 
     # scraping through the page to find a description
     desc = soup.find('p', {"class" : "margin-0-auto"})
@@ -597,8 +612,6 @@ def search(category):
     embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = link)
     embedRecipe.set_image(url="{}".format(scraper.image()))
 
-     
-   
     return embedRecipe
     
 @bot.command()
@@ -632,7 +645,6 @@ async def on_select_option(interaction):
     #searching for a recipe
     embed1 =search(interaction.values[0])
     
-
     await interaction.respond(embed = embed1)
 
     
