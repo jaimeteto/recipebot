@@ -636,4 +636,4 @@ async def on_select_option(interaction):
     await interaction.respond(embed = embed1)
 
     
-bot.run('OTU1ODgzMzIxNDc1MzQ2NDky.YjoJtw.2yj-VY4OEeMefKtFNjhJihFwrJo')
+bot.run('OTUyMjg0NjE1NTM0NTgzODA4.YizyKA.3fnwxAhIObzZBV_FZ04DsjwSgEM')
