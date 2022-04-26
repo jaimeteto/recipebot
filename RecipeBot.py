@@ -22,11 +22,10 @@ from discord_components import DiscordComponents,ComponentsBot,Button,SelectOpti
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
 options.add_argument('--ignore-ssl-errors')
+options.add_argument("--headless")
 
 # Setting our browser to use Chrome
 driver = webdriver.Chrome(options=options)
-
-
 
 
 # Accessing our desired pages to scrape
@@ -171,7 +170,32 @@ async def recipes(ctx, *, arg):
             embedRecipe.set_image(url = "https://c.tenor.com/Fyf-HQ5CgZcAAAAC/salad-funny.gif")
         elif "fries" in arg:
             embedRecipe.set_image(url = "https://c.tenor.com/rUdNSJQOiU8AAAAC/dechartgames-hungry-garden.gif")
+    
+    button_Ing = Button(label="Ingredients", style="2", custom_id="b1")
+    button_Stop = Button(label="Stop", style="2", custom_id="b2")
+    button_Ref = Button(label="Refresh", style="2", custom_id="b3")
 
+    await ctx.trigger_typing()
+    await asyncio.sleep(0.5)
+    await ctx.send(embed=embedRecipe, components=[[button_Ing, button_Stop, button_Ref]])
+    # storing ingredients and creating an embed to display to the user
+    ingredients = scraper.ingredients()
+    embedIngredients = discord.Embed(title='List of Ingredients', description="\n".join(ingredients), color=discord.Colour(0x3498DB))
+    embedStop = discord.Embed()
+    embedStop.set_image(url="https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
+    embed_no = discord.Embed(title="", description="")
+
+    interaction = await bot.wait_for("button_click")
+    if (interaction.component.custom_id == "b1"):
+        await interaction.respond(embed=embedIngredients, ephemeral=False)
+    elif (interaction.component.custom_id == "b2"):
+        await interaction.respond(embed=embedStop, ephemeral=False)
+    elif (interaction.component.custom_id == "b3"):
+        await interaction.defer(ephemeral= False)
+        await recipes(ctx = ctx, arg = arg)
+        await interaction.respond(embed=embed_no)
+            
+    """
     await ctx.trigger_typing()
     await asyncio.sleep(0.5)
     await ctx.send(embed=embedRecipe)
@@ -212,7 +236,8 @@ async def recipes(ctx, *, arg):
         await recipes(ctx = ctx, arg = arg)
     except asyncio.TimeoutError:
         await ctx.send("")
-
+    """
+    
 # gathering what recipe our bot will search for
 @bot.command(description='Call this command to search for recipes with certain ingredients')
 # adding a cooldown between commands
@@ -280,7 +305,32 @@ async def ingredients(ctx, *, arg):
             embedRecipe.set_image(url = "https://c.tenor.com/G24ZSNHLmRUAAAAC/yahia-potato.gif")
         elif "milk" in arg:
             embedRecipe.set_image(url = "https://c.tenor.com/9wGf-oOHKMsAAAAd/cow-cow-milk.gif")
-    
+            
+    button_Ing = Button(label="Ingredients", style="2", custom_id="b1")
+    button_Stop = Button(label="Stop", style="2", custom_id="b2")
+    button_Ref = Button(label="Refresh", style="2", custom_id="b3")
+
+    await ctx.trigger_typing()
+    await asyncio.sleep(0.5)
+    await ctx.send(embed=embedRecipe, components=[[button_Ing, button_Stop, button_Ref]])
+    # storing ingredients and creating an embed to display to the user
+    ingredients = scraper.ingredients()
+    embedIngredients = discord.Embed(title='List of Ingredients', description="\n".join(ingredients), color=discord.Colour(0x3498DB))
+    embedStop = discord.Embed()
+    embedStop.set_image(url="https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
+    embed_no = discord.Embed(title="", description="")
+
+    interaction = await bot.wait_for("button_click")
+    if (interaction.component.custom_id == "b1"):
+        await interaction.respond(embed=embedIngredients, ephemeral=False)
+    elif (interaction.component.custom_id == "b2"):
+        await interaction.respond(embed=embedStop, ephemeral=False)
+    elif (interaction.component.custom_id == "b3"):
+        await interaction.defer(ephemeral= False)
+        await ingredients(ctx = ctx, arg = arg)
+        await interaction.respond(embed=embed_no)
+        
+    """
     await ctx.trigger_typing()
     await asyncio.sleep(0.5)
     await ctx.send(embed=embedRecipe)
@@ -322,7 +372,9 @@ async def ingredients(ctx, *, arg):
         await recipes(ctx = ctx, arg = arg)
     except asyncio.TimeoutError:
         await ctx.send("")
-            
+    """
+    
+    
 # gathering what recipe our bot will search for
 @bot.command(description='Call this command to search for recipes with certain ingredients')
 # adding a cooldown between commands
@@ -372,6 +424,31 @@ async def exclude(ctx, *, arg):
     embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
     embedRecipe.set_image(url="{}".format(scraper.image()))
 
+    button_Ing = Button(label="Ingredients", style="2", custom_id="b1")
+    button_Stop = Button(label="Stop", style="2", custom_id="b2")
+    button_Ref = Button(label="Refresh", style="2", custom_id="b3")
+
+    await ctx.trigger_typing()
+    await asyncio.sleep(0.5)
+    await ctx.send(embed=embedRecipe, components=[[button_Ing, button_Stop, button_Ref]])
+    # storing ingredients and creating an embed to display to the user
+    ingredients = scraper.ingredients()
+    embedIngredients = discord.Embed(title='List of Ingredients', description="\n".join(ingredients), color=discord.Colour(0x3498DB))
+    embedStop = discord.Embed()
+    embedStop.set_image(url="https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
+    embed_no = discord.Embed(title="", description="")
+
+    interaction = await bot.wait_for("button_click")
+    if (interaction.component.custom_id == "b1"):
+        await interaction.respond(embed=embedIngredients, ephemeral=False)
+    elif (interaction.component.custom_id == "b2"):
+        await interaction.respond(embed=embedStop, ephemeral=False)
+    elif (interaction.component.custom_id == "b3"):
+        await interaction.defer(ephemeral= False)
+        await exclude(ctx = ctx, arg = arg)
+        await interaction.respond(embed=embed_no)
+    
+    """
     await ctx.trigger_typing()
     await asyncio.sleep(0.5)
     await ctx.send(embed=embedRecipe)
@@ -414,7 +491,8 @@ async def exclude(ctx, *, arg):
         await recipes(ctx = ctx, arg = arg)
     except asyncio.TimeoutError:
         await ctx.send("")
-          
+    """
+    
 # sort of overwriting help command to follow a certain format
 class HelpCommand(commands.MinimalHelpCommand):
     async def send_pages(self):
