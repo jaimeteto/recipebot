@@ -424,40 +424,35 @@ async def convert(ctx, *args):
 @bot.command(description = 'Call this command in order to find out all valid inputs to the !convert command')
 async def measurements(ctx):
 
-    # list containing a the valid arguments for the !convert command
-    options = ['————————————————————————————————————',
-               '\t\tVolume Measurements',
-               '————————————————————————————————————',
-               'Teaspoons (tsp):          teaspoon',
-               'Tablespoons (Tbsp):       tablespoon',
-               'Gills (gi):               gill',
-               'Imperial Gills (gi):      UK+gill',
-               'Cups (c):                 cup',
-               'Imperial Cups (c):        UK+cup',
-               'Pints (pt):               pint',
-               'Imperial Pints (pt):      UK+pint',
-               'Imperial Quarts (qt):     UK+quart',
-               'Gallons (gal):            gal',
-               'Imperial Gallons (gal):   UK+gal',
-               '————————————————————————————————————',
-               '\t\tWeight Measurements',
-               '————————————————————————————————————',
-               'Ounces (oz):              oz',
-               'Fluid Ounces (fl. oz.):   fluid+oz',
-               'Grains (gr):              grain',
-               'Grams (g):                g',
-               'Decagrams (dag):          decagram',
-               'Kilograms (kg):           kg',
-               'Pounds (lb):              lb',
-               '————————————————————————————————————',
-               '\t  Temperature Measurements',
-               '————————————————————————————————————',
-               'Celsius (°C):             c',
-               'Fahrenheit (°F):          f',]
+    # array with volumetric measurements
+    vol = ['Teaspoons (tsp):          **teaspoon**',
+               'Tablespoons (Tbsp):       **tablespoon**',
+               'Gills (gi):               **gill**',
+               'Imperial Gills (gi):      **UK+gill**',
+               'Cups (c):                 **cup**',
+               'Imperial Cups (c):        **UK+cup**',
+               'Pints (pt):               **pint**',
+               'Imperial Pints (pt):      **UK+pint**',
+               'Imperial Quarts (qt):     **UK+quart**',
+               'Gallons (gal):            **gal**',
+               'Imperial Gallons (gal):   **UK+gal**']
+    # array with weighted measurements
+    weight = ['Ounces (oz):              **oz**',
+              'Fluid Ounces (fl. oz.):   **fluid+oz**',
+              'Grains (gr):              **grain**',
+              'Grams (g):                **g**',
+              'Decagrams (dag):          **decagram**',
+              'Kilograms (kg):           **kg**',
+              'Pounds (lb):              **lb**']
+    # array with temperature measurements
+    temp = ['Celsius (°C):             **c**',
+            'Fahrenheit (°F):          **f**']
 
-    d = '```' + '\n'.join(options) + '```'
+    embedUnits = discord.Embed(title = 'Supported Cooking Measurements', color = discord.Colour(0xDC143C))
+    embedUnits.add_field(name = 'Volume Measurements', value = '\n'.join(vol))
+    embedUnits.add_field(name = 'Weight Measurements', value = '\n'.join(weight))
+    embedUnits.add_field(name = 'Weight Measurements', value = '\n'.join(temp))
 
-    embedUnits = discord.Embed(title = 'Supported Cooking Measurements', description = d, color = discord.Colour(0xDC143C))
     await ctx.send(embed = embedUnits)
 
 
