@@ -52,7 +52,7 @@ img_id = []
 
 
 # setting up bot to register commands that start with an !
-bot = commands.Bot(command_prefix='!')
+bot = commands.Bot(command_prefix='!', help_command=None)
 
 
 
@@ -367,17 +367,18 @@ async def exclude(ctx, *, arg):
 
     
 # sort of overwriting help command to follow a certain format
-class HelpCommand(commands.MinimalHelpCommand):
-    async def send_pages(self):
-        # gets all of our commands, and adds its description to our help command
-        destination = self.get_destination()
-        eb = discord.Embed(color=discord.Color.green(), description='')
-        for page in self.paginator.pages:
-            eb.description += page
-        await destination.send(embed=eb)
-
-bot.help_command = HelpCommand()
-
+@bot.command(description='Call this command to get a list of commands')
+async def help(ctx):
+  
+    embed = discord.Embed(color=discord.Color.green(), title = "Commands supported by Recipe Bot")
+    embed.add_field(name="!recipes", value="Search for recipes with specific keywords")
+    embed.add_field(name="!ingredients", value="Search for recipes with ingredients on-hand")
+    embed.add_field(name="!exclude", value="Search for recipes without certain ingredients")
+    embed.add_field(name="!convert", value="Convert numbers from one unit of measurement to another")
+    embed.add_field(name="!measurements", value ="Get a list of valid inputs for the !convert" )
+    embed.add_field(name="!timer", value="Create a timer to keep track of your recipes")
+    embed.add_field(name="!categories", value="Select a category of food from a dropdown menu")
+    await ctx.send(embed=embed)
 
       
 # give a table containing all conversions for the user input
