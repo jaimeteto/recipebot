@@ -22,11 +22,10 @@ from discord_components import DiscordComponents,ComponentsBot,Button,SelectOpti
 options = webdriver.ChromeOptions()
 options.add_argument('--ignore-certificate-errors')
 options.add_argument('--ignore-ssl-errors')
+options.add_argument("--headless")
 
 # Setting our browser to use Chrome
 driver = webdriver.Chrome(options=options)
-
-
 
 
 # Accessing our desired pages to scrape
@@ -53,7 +52,7 @@ img_id = []
 
 
 # setting up bot to register commands that start with an !
-bot = commands.Bot(command_prefix='!')
+bot = commands.Bot(command_prefix='!', help_command=None)
 
 
 
@@ -149,7 +148,10 @@ async def recipes(ctx, *, arg):
         elif "chips" in arg:
              embedRecipe.set_image(url = "https://c.tenor.com/RuisIo5_WlQAAAAd/awkward.gif")
         elif "sandwich" in arg:
-            embedRecipe.set_image(url = "https://c.tenor.com/p98d_YNK3K8AAAAC/gordon-ramsay-idiot-sandwich.gif")
+            if (randomNum % 2 == 0):
+                embedRecipe.set_image(url = "https://c.tenor.com/8PHh0EUxLFwAAAAM/drop-down-failarmy.gif")
+            else:
+                embedRecipe.set_image(url = "https://c.tenor.com/p98d_YNK3K8AAAAC/gordon-ramsay-idiot-sandwich.gif")
         elif "chili" in arg:
             embedRecipe.set_image(url = "https://c.tenor.com/x_1Gmh_QmHAAAAAd/office.gif")
         elif "pancake" in arg:
@@ -160,48 +162,41 @@ async def recipes(ctx, *, arg):
             embedRecipe.set_image(url = "https://media2.giphy.com/media/we4Hp4J3n7riw/200w.webp?cid=ecf05e47lqorkq8o2nt0adybjwztql7ggbb1ly3p05m7ucpd&rid=200w.webp&ct=g")
         elif "pan" in arg:
             embedRecipe.set_image(url = "https://c.tenor.com/zYJFQVV7R1AAAAAC/cooking-viralhog.gif")
+        elif "hotdog" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/GB-11l60LwYAAAAd/hotdog-fingers-playing-with-meat.gif")
+        elif "pizza" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/9q7E1GsL-hQAAAAd/wasted-pizza-failarmy.gif")
+        elif "salad" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/Fyf-HQ5CgZcAAAAC/salad-funny.gif")
+        elif "fries" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/rUdNSJQOiU8AAAAC/dechartgames-hungry-garden.gif")
+    
+    button_Ing = Button(label="Ingredients", style="2", custom_id="b1")
+    button_Stop = Button(label="Stop", style="2", custom_id="b2")
+    button_Ref = Button(label="Refresh", style="2", custom_id="b3")
 
     await ctx.trigger_typing()
     await asyncio.sleep(0.5)
-    await ctx.send(embed=embedRecipe)
-    
-    # asks if the user would like a list of ingredients, getting their response via reactions
-    msg = await ctx.send("Would you like a list of ingredients?")
-    await msg.add_reaction('✅')
-    await msg.add_reaction('❌')
-    
+    await ctx.send(embed=embedRecipe, components=[[button_Ing, button_Stop, button_Ref]])
     # storing ingredients and creating an embed to display to the user
     ingredients = scraper.ingredients()
     embedIngredients = discord.Embed(title='List of Ingredients', description="\n".join(ingredients), color=discord.Colour(0x3498DB))
+    embedStop = discord.Embed()
+    embedStop.set_image(url="https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
+    embed_no = discord.Embed(title="", description="")
 
-    # try except statement to figure out what to do based on the users response
-    try:
-        reaction, user = await bot.wait_for('reaction_add')
-        while user == bot.user:
-            reaction, user = await bot.wait_for('reaction_add', timeout=5.0)
-        if str(reaction.emoji) == '✅':
-            await ctx.trigger_typing()
-            await asyncio.sleep(0.5)
-            await ctx.send(embed=embedIngredients)
-        elif str(reaction.emoji) == '❌':
-            await ctx.send("https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
-    except asyncio.TimeoutError:
-        await ctx.send("")
-
-    # new message to ask if the user wants to get another recipe with the same arguments
-    msgRefresh = await ctx.send("Would you like a different recipe?")
-    await msgRefresh.add_reaction('🔄')
-    await msgRefresh.add_reaction('❌')
-    # a function to check if the user responded with a refresh emoji
-    def check(reaction, user):
-        return user == ctx.author and str(reaction.emoji) == '🔄'
-    # try except statement to decide on recalling the command again
-    try:
-        await bot.wait_for('reaction_add', timeout=5.0, check=check)
+    interaction = await bot.wait_for("button_click")
+    if (interaction.component.custom_id == "b1"):
+        await interaction.respond(embed=embedIngredients, ephemeral=False)
+    elif (interaction.component.custom_id == "b2"):
+        await interaction.respond(embed=embedStop, ephemeral=False)
+    elif (interaction.component.custom_id == "b3"):
+        await interaction.defer(ephemeral= False)
         await recipes(ctx = ctx, arg = arg)
-    except asyncio.TimeoutError:
-        await ctx.send("")
+        await interaction.respond(embed=embed_no)
+            
 
+    
 # gathering what recipe our bot will search for
 @bot.command(description='Call this command to search for recipes with certain ingredients')
 # adding a cooldown between commands
@@ -252,48 +247,50 @@ async def ingredients(ctx, *, arg):
     embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
     embedRecipe.set_image(url="{}".format(scraper.image()))
 
+    # determining in a 1 out of 5 chance to replace the recipe's image with a meme depending on the keyword
+    if (randomNum % 2 == 0):
+        # locate the specific keyword to associate the correct meme or gif
+        if "chocolate" in arg:
+            embedRecipe.set_image(url = "https://media3.giphy.com/media/JpehtCvclNLSE/giphy.gif?cid=790b76111a633b4e28035d07ecd58f69587130f7c54cf3e5&rid=giphy.gif&ct=g")
+        elif "quinoa" in arg:
+            embedRecipe.set_image(url = "https://i1.wp.com/i.giphy.com/media/8EpFqeoStLm4FLaWxC/giphy.gif")
+        elif "flour" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/ab3DJeJOmJQAAAAd/cake-mistake.gif")
+        elif "chicken" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/4kVtSIKi46YAAAAC/chicken-starbucks.gif")
+        elif "broccoli" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/pfPkY9-DrEMAAAAC/broccoli-eat-me.gif")
+        elif "potato" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/G24ZSNHLmRUAAAAC/yahia-potato.gif")
+        elif "milk" in arg:
+            embedRecipe.set_image(url = "https://c.tenor.com/9wGf-oOHKMsAAAAd/cow-cow-milk.gif")
+            
+    button_Ing = Button(label="Ingredients", style="2", custom_id="b1")
+    button_Stop = Button(label="Stop", style="2", custom_id="b2")
+    button_Ref = Button(label="Refresh", style="2", custom_id="b3")
+
     await ctx.trigger_typing()
     await asyncio.sleep(0.5)
-    await ctx.send(embed=embedRecipe)
-    
-    # asks if the user would like a list of ingredients, getting their response via reactions
-    msg = await ctx.send("Would you like a list of ingredients?")
-    await msg.add_reaction('✅')
-    await msg.add_reaction('❌')
-    
-    
+    await ctx.send(embed=embedRecipe, components=[[button_Ing, button_Stop, button_Ref]])
     # storing ingredients and creating an embed to display to the user
     ingredients = scraper.ingredients()
     embedIngredients = discord.Embed(title='List of Ingredients', description="\n".join(ingredients), color=discord.Colour(0x3498DB))
+    embedStop = discord.Embed()
+    embedStop.set_image(url="https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
+    embed_no = discord.Embed(title="", description="")
 
-    # try except statement to figure out what to do based on the users response
-    try:
-        reaction, user = await bot.wait_for('reaction_add')
-        while user == bot.user:
-            reaction, user = await bot.wait_for('reaction_add', timeout=5.0)
-        if str(reaction.emoji) == '✅':
-            await ctx.trigger_typing()
-            await asyncio.sleep(0.5)
-            await ctx.send(embed=embedIngredients)
-        elif str(reaction.emoji) == '❌':
-            await ctx.send("https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
-    except asyncio.TimeoutError:
-        await ctx.send("")
-
-    # new message to ask if the user wants to get another recipe with the same arguments
-    msgRefresh = await ctx.send("Would you like a different recipe?")
-    await msgRefresh.add_reaction('🔄')
-    await msgRefresh.add_reaction('❌')
-    # a function to check if the user responded with a refresh emoji
-    def check(reaction, user):
-        return user == ctx.author and str(reaction.emoji) == '🔄'
-    # try except statement to decide on recalling the command again
-    try:
-        await bot.wait_for('reaction_add', timeout=5.0, check=check)
+    interaction = await bot.wait_for("button_click")
+    if (interaction.component.custom_id == "b1"):
+        await interaction.respond(embed=embedIngredients, ephemeral=False)
+    elif (interaction.component.custom_id == "b2"):
+        await interaction.respond(embed=embedStop, ephemeral=False)
+    elif (interaction.component.custom_id == "b3"):
+        await interaction.defer(ephemeral= False)
         await recipes(ctx = ctx, arg = arg)
-    except asyncio.TimeoutError:
-        await ctx.send("")
-            
+        await interaction.respond(embed=embed_no)
+
+    
+    
 # gathering what recipe our bot will search for
 @bot.command(description='Call this command to search for recipes with certain ingredients')
 # adding a cooldown between commands
@@ -343,61 +340,45 @@ async def exclude(ctx, *, arg):
     embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = links['href'])
     embedRecipe.set_image(url="{}".format(scraper.image()))
 
+    button_Ing = Button(label="Ingredients", style="2", custom_id="b1")
+    button_Stop = Button(label="Stop", style="2", custom_id="b2")
+    button_Ref = Button(label="Refresh", style="2", custom_id="b3")
+
     await ctx.trigger_typing()
     await asyncio.sleep(0.5)
-    await ctx.send(embed=embedRecipe)
-
-
-    # asks if the user would like a list of ingredients, getting their response via reactions
-    msg = await ctx.send("Would you like a list of ingredients?")
-    await msg.add_reaction('✅')
-    await msg.add_reaction('❌')
-
-
+    await ctx.send(embed=embedRecipe, components=[[button_Ing, button_Stop, button_Ref]])
     # storing ingredients and creating an embed to display to the user
     ingredients = scraper.ingredients()
     embedIngredients = discord.Embed(title='List of Ingredients', description="\n".join(ingredients), color=discord.Colour(0x3498DB))
+    embedStop = discord.Embed()
+    embedStop.set_image(url="https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
+    embed_no = discord.Embed(title="", description="")
 
-    # try except statement to figure out what to do based on the users response
-    try:
-        reaction, user = await bot.wait_for('reaction_add')
-        while user == bot.user:
-            reaction, user = await bot.wait_for('reaction_add', timeout=5.0)
-        if str(reaction.emoji) == '✅':
-            await ctx.trigger_typing()
-            await asyncio.sleep(0.5)
-            await ctx.send(embed=embedIngredients)
-        elif str(reaction.emoji) == '❌':
-            await ctx.send("https://c.tenor.com/okyDOdvpVDcAAAAC/master-chef-gordon-ramsey.gif")
-    except asyncio.TimeoutError:
-        await ctx.send("")
+    interaction = await bot.wait_for("button_click")
+    if (interaction.component.custom_id == "b1"):
+        await interaction.respond(embed=embedIngredients, ephemeral=False)
+    elif (interaction.component.custom_id == "b2"):
+        await interaction.respond(embed=embedStop, ephemeral=False)
+    elif (interaction.component.custom_id == "b3"):
+        await interaction.defer(ephemeral= False)
+        await exclude(ctx = ctx, arg = arg)
+        await interaction.respond(embed=embed_no)
+    
 
-    # new message to ask if the user wants to get another recipe with the same arguments
-    msgRefresh = await ctx.send("Would you like a different recipe?")
-    await msgRefresh.add_reaction('🔄')
-    await msgRefresh.add_reaction('❌')
-    # a function to check if the user responded with a refresh emoji
-    def check(reaction, user):
-        return user == ctx.author and str(reaction.emoji) == '🔄'
-    # try except statement to decide on recalling the command again
-    try:
-        await bot.wait_for('reaction_add', timeout=5.0, check=check)
-        await recipes(ctx = ctx, arg = arg)
-    except asyncio.TimeoutError:
-        await ctx.send("")
-          
+    
 # sort of overwriting help command to follow a certain format
-class HelpCommand(commands.MinimalHelpCommand):
-    async def send_pages(self):
-        # gets all of our commands, and adds its description to our help command
-        destination = self.get_destination()
-        eb = discord.Embed(color=discord.Color.green(), description='')
-        for page in self.paginator.pages:
-            eb.description += page
-        await destination.send(embed=eb)
-
-bot.help_command = HelpCommand()
-
+@bot.command(description='Call this command to get a list of commands')
+async def help(ctx):
+  
+    embed = discord.Embed(color=discord.Color.green(), title = "Commands supported by Recipe Bot")
+    embed.add_field(name="!recipes", value="Search for recipes with specific keywords")
+    embed.add_field(name="!ingredients", value="Search for recipes with ingredients on-hand")
+    embed.add_field(name="!exclude", value="Search for recipes without certain ingredients")
+    embed.add_field(name="!convert", value="Convert numbers from one unit of measurement to another")
+    embed.add_field(name="!measurements", value ="Get a list of valid inputs for the !convert" )
+    embed.add_field(name="!timer", value="Create a timer to keep track of your recipes")
+    embed.add_field(name="!categories", value="Select a category of food from a dropdown menu")
+    await ctx.send(embed=embed)
 
       
 # give a table containing all conversions for the user input
@@ -443,40 +424,35 @@ async def convert(ctx, *args):
 @bot.command(description = 'Call this command in order to find out all valid inputs to the !convert command')
 async def measurements(ctx):
 
-    # list containing a the valid arguments for the !convert command
-    options = ['————————————————————————————————————',
-               '\t\tVolume Measurements',
-               '————————————————————————————————————',
-               'Teaspoons (tsp):          teaspoon',
-               'Tablespoons (Tbsp):       tablespoon',
-               'Gills (gi):               gill',
-               'Imperial Gills (gi):      UK+gill',
-               'Cups (c):                 cup',
-               'Imperial Cups (c):        UK+cup',
-               'Pints (pt):               pint',
-               'Imperial Pints (pt):      UK+pint',
-               'Imperial Quarts (qt):     UK+quart',
-               'Gallons (gal):            gal',
-               'Imperial Gallons (gal):   UK+gal',
-               '————————————————————————————————————',
-               '\t\tWeight Measurements',
-               '————————————————————————————————————',
-               'Ounces (oz):              oz',
-               'Fluid Ounces (fl. oz.):   fluid+oz',
-               'Grains (gr):              grain',
-               'Grams (g):                g',
-               'Decagrams (dag):          decagram',
-               'Kilograms (kg):           kg',
-               'Pounds (lb):              lb',
-               '————————————————————————————————————',
-               '\t  Temperature Measurements',
-               '————————————————————————————————————',
-               'Celsius (°C):             c',
-               'Fahrenheit (°F):          f',]
+    # array with volumetric measurements
+    vol = ['Teaspoons (tsp):          **teaspoon**',
+               'Tablespoons (Tbsp):       **tablespoon**',
+               'Gills (gi):               **gill**',
+               'Imperial Gills (gi):      **UK+gill**',
+               'Cups (c):                 **cup**',
+               'Imperial Cups (c):        **UK+cup**',
+               'Pints (pt):               **pint**',
+               'Imperial Pints (pt):      **UK+pint**',
+               'Imperial Quarts (qt):     **UK+quart**',
+               'Gallons (gal):            **gal**',
+               'Imperial Gallons (gal):   **UK+gal**']
+    # array with weighted measurements
+    weight = ['Ounces (oz):              **oz**',
+              'Fluid Ounces (fl. oz.):   **fluid+oz**',
+              'Grains (gr):              **grain**',
+              'Grams (g):                **g**',
+              'Decagrams (dag):          **decagram**',
+              'Kilograms (kg):           **kg**',
+              'Pounds (lb):              **lb**']
+    # array with temperature measurements
+    temp = ['Celsius (°C):             **c**',
+            'Fahrenheit (°F):          **f**']
 
-    d = '```' + '\n'.join(options) + '```'
+    embedUnits = discord.Embed(title = 'Supported Cooking Measurements', color = discord.Colour(0xDC143C))
+    embedUnits.add_field(name = 'Volume Measurements', value = '\n'.join(vol))
+    embedUnits.add_field(name = 'Weight Measurements', value = '\n'.join(weight))
+    embedUnits.add_field(name = 'Weight Measurements', value = '\n'.join(temp))
 
-    embedUnits = discord.Embed(title = 'Supported Cooking Measurements', description = d, color = discord.Colour(0xDC143C))
     await ctx.send(embed = embedUnits)
 
 
@@ -490,14 +466,10 @@ async def timer(ctx,name:str,minutes:int,seconds=0):
     currentTime = time.time()
     targetTime = totalTime + currentTime
    
-    
-    
     # no negative inputs
     if minutes <0 or seconds< 0:
         await ctx.send("number can't be a negative")
     else:
-
-        
         #initial display
         embedVar1 = discord.Embed(title="Timer", description= f"Timer set by:{ctx.message.author.mention} ", color=0x336EFF)
         embedVar1.add_field(name=f"{name}",value = "timer name", inline=False)
@@ -525,17 +497,9 @@ async def timer(ctx,name:str,minutes:int,seconds=0):
         embedVar3.add_field(name=f"Timer:", value="0:0", inline=False)
         await message1.edit(embed = embedVar3)
 
-
-
         embedVar = discord.Embed(title=f"Timer for {name} has ended", description= f"Timer set by:{ctx.message.author.mention}", color=0x336EFF)
-        
-
+        embedVar.set_image(url = 'https://c.tenor.com/zk8raXIIkcUAAAAC/gordon-ramsay-master-chef.gif')
         await ctx.send(embed=embedVar)
-
-
-
-
-
 
 #method used to search recipes for a given category
 def search(category):
@@ -585,13 +549,11 @@ def search(category):
     link = random_link[randomNum].get('href')
         
     scraper = scrape_me(link)
-    
         
     #getting access to our desired recipe page to scrape more information
     r = requests.get(link)
     sourcePage = r.content
     soup = BeautifulSoup(sourcePage, 'lxml')
-
 
     # scraping through the page to find a description
     desc = soup.find('p', {"class" : "margin-0-auto"})
@@ -600,8 +562,6 @@ def search(category):
     embedRecipe = discord.Embed(title=scraper.title(), description="{}".format(desc.text), color=discord.Colour(0x8A2BE2), url = link)
     embedRecipe.set_image(url="{}".format(scraper.image()))
 
-     
-   
     return embedRecipe
     
 @bot.command()
@@ -635,8 +595,7 @@ async def on_select_option(interaction):
     #searching for a recipe
     embed1 =search(interaction.values[0])
     
-
     await interaction.respond(embed = embed1)
 
     
-bot.run('OTU1ODgzMzIxNDc1MzQ2NDky.YjoJtw.2yj-VY4OEeMefKtFNjhJihFwrJo')
+bot.run('OTUyMjg0NjE1NTM0NTgzODA4.YizyKA.3fnwxAhIObzZBV_FZ04DsjwSgEM')
