@@ -549,32 +549,35 @@ def search(category):
     italian = 'https://www.allrecipes.com/recipes/723/world-cuisine/european/italian/'
     lowcalorie = 'https://www.allrecipes.com/recipes/1232/healthy-recipes/low-calorie/'
 
+    Mainurl =''
+
     #getting driver according to category
     if category == "lunch":
-        driver.get(lunch)
+        Mainurl = lunch
     elif category== "breakfast":
-        driver.get(breakfast)
+        Mainurl=breakfast
     elif category== "dinner":
-        driver.get(dinner)
+        Mainurl=dinner
     elif category== "mexican":
-        driver.get(mexican)
+        Mainurl = mexican
     elif category =="chinese":
-        driver.get(chinese)
+        Mainurl = chinese
     elif category =="italian":
-        driver.get(italian)
+        Mainurl = italian
     elif category ==("lowCalorie"):
-        driver.get(lowcalorie)
-    # getting url of our current page, which is going to be the page where the recipes are
-    url = driver.current_url
+        Mainurl = lowcalorie
+    #getting url of our current page, which is going to be the page where the recipes are
+    #url = driver.current_url
     
     # now creating variable r to get access to our url using BeautifulSoup 
-    r = requests.get(url)
+    r = requests.get(Mainurl)
     sourcePage = r.content
 
     soup = BeautifulSoup(sourcePage, 'lxml')
     
-    # going through web page to find all instances of a certain div
-    random_link = soup.findAll('a', {"class" : "card__titleLink manual-link-behavior elementFont__titleLink margin-8-bottom"}, limit = 4)
+    # going through web page to find all instances of a certain div and limiting to 10 for speed pursposes 
+    random_link = soup.findAll('a', {"class" : "card__titleLink manual-link-behavior elementFont__titleLink margin-8-bottom"}, limit = 10)
+    #print(random_link)
     # grabbing a random link from our list to display to the user
     # this way they won't see duplicate results as often
     randomNum = random.randint(0, len(random_link)-1)
@@ -584,7 +587,7 @@ def search(category):
     scraper = scrape_me(link)
     
         
-    # getting access to our desired recipe page to scrape more information
+    #getting access to our desired recipe page to scrape more information
     r = requests.get(link)
     sourcePage = r.content
     soup = BeautifulSoup(sourcePage, 'lxml')
